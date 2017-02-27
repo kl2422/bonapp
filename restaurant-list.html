@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+	</head>
+	<body ng-app="myApp" ng-controller="myCtl">
+		
+		<div infinite-scroll="restaurant.nextPage()" infinite-scroll-disabled="restaurant.busy" 
+			infinite-scroll-distance='1' >
+			<div ng-repeat="item in restaurant.items" >
+				<span>
+					<img ng-src="{{item.thumbnail}}" />
+				</span>
+				<a href="javascript:void(0)">{{item.name}}</a>
+				<p>Cuisine: {{item.cuisine}}</p>
+			</div>
+			<div ng-show="restaurant.busy" >Loading data</div>
+		</div>
+		
+	</body>
+	
+	<script type='text/javascript' src='js/jquery-2.0.3.min.js'></script>
+	<script type='text/javascript' src='js/angular.js'></script>
+	<script type='text/javascript' src='js/ng-infinite-scroll.js'></script>
+	
+	<script>
+		var myApp = angular.module('myApp', ['infinite-scroll'])
+			.controller('myCtl', function($scope, Restaurant) {
+			$scope.restaurant = new Restaurant();
+		});
+		
+		myApp.factory('Restaurant', function($http) {
+			
+			var Restaurant = function () {
+				this.items = [];
+				this.busy = false;
+				this.page = 1;
+			}
+			
+			Restaurant.prototype.nextPage = function () {
+				// 根据busy判断是否加载数据
+				if (this.busy) {
+					return;
+				}
+				this.busy = true;
+				var url = "http://iservice.itshsxt.com/restaurant/find?callback=JSON_CALLBACK";
+				// 请求数据
+				var params = {page: this.page};
+				$http({method:'jsonp', url: url, params:params}).success(function(data) {
+					var items = data.result;
+					this.items = this.items.concat(items); // 将两个数据合并
+					
+					this.page = data.query.page + 1; // 下一页的页码
+					this.busy = false;
+					
+					
+				}.bind(this));
+			}
+			return Restaurant;
+		});
+		
+		
+	</script>
+	
+	
+</html>
